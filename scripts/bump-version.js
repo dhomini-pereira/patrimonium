@@ -18,7 +18,7 @@ function writeJSON(filePath, data) {
 
 function bumpPatch(version) {
   const parts = version.split(".").map(Number);
-  if (parts.length !== 3 || parts.some(isNaN)) {
+  if (parts.length !== 3 || parts.some(Number.isNaN)) {
     console.error(`Invalid semver: "${version}". Expected x.y.z`);
     process.exit(1);
   }

@@ -7,7 +7,7 @@ export interface User {
 export interface Account {
   id: string;
   name: string;
-  type: 'wallet' | 'checking' | 'digital' | 'investment';
+  type: "wallet" | "checking" | "digital" | "investment";
   balance: number;
   color: string;
 }
@@ -16,20 +16,20 @@ export interface Category {
   id: string;
   name: string;
   icon: string;
-  type: 'income' | 'expense';
+  type: "income" | "expense";
 }
 
 export interface Transaction {
   id: string;
   description: string;
   amount: number;
-  type: 'income' | 'expense';
+  type: "income" | "expense";
   categoryId: string;
   accountId: string | null;
   creditCardId?: string | null;
   date: string;
   recurring: boolean;
-  recurrence?: 'daily' | 'weekly' | 'monthly' | 'yearly';
+  recurrence?: "daily" | "weekly" | "monthly" | "yearly";
   nextDueDate?: string | null;
   recurrenceCount?: number | null;
   recurrenceCurrent?: number;
@@ -64,6 +64,7 @@ export interface CreditCard {
   limit: number;
   closingDay: number;
   dueDay: number;
+  bestPurchaseDay: number;
   color: string;
   usedAmount: number;
   availableLimit: number;
