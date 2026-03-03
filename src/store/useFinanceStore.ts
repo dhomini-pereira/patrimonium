@@ -7,6 +7,9 @@ import {
   goalsApi,
   transfersApi,
   creditCardsApi,
+  familyMembersApi,
+  sharedAccountsApi,
+  insightsApi,
 } from '@/services/api';
 import type {
   Account,
@@ -16,6 +19,9 @@ import type {
   Goal,
   CreditCard,
   CreditCardInvoice,
+  FamilyMember,
+  SharedAccount,
+  InsightsData,
 } from '@/types/finance';
 
 interface FinanceState {
@@ -25,6 +31,8 @@ interface FinanceState {
   investments: Investment[];
   goals: Goal[];
   creditCards: CreditCard[];
+  familyMembers: FamilyMember[];
+  insights: InsightsData | null;
   loading: boolean;
   actionLoading: boolean;
   error: string | null;
@@ -63,6 +71,18 @@ interface FinanceState {
   deleteCreditCard: (id: string) => Promise<void>;
   getInvoices: (cardId: string) => Promise<CreditCardInvoice[]>;
   payInvoice: (invoiceId: string, accountId: string) => Promise<void>;
+  unpayInvoice: (invoiceId: string) => Promise<void>;
+
+  addFamilyMember: (data: { name: string }) => Promise<void>;
+  updateFamilyMember: (id: string, data: { name: string }) => Promise<void>;
+  deleteFamilyMember: (id: string) => Promise<void>;
+
+  inviteSharedAccount: (email: string, accountId: string) => Promise<SharedAccount>;
+  listMyShares: () => Promise<SharedAccount[]>;
+  removeShare: (id: string) => Promise<void>;
+  listSharedWithMe: () => Promise<SharedAccount[]>;
+  getSharedTransactions: (accountId: string) => Promise<Transaction[]>;
+  fetchInsights: () => Promise<InsightsData | null>;
 }
 
 const initialState = {
@@ -72,6 +92,8 @@ const initialState = {
   investments: [] as Investment[],
   goals: [] as Goal[],
   creditCards: [] as CreditCard[],
+  familyMembers: [] as FamilyMember[],
+  insights: null as InsightsData | null,
   loading: false,
   actionLoading: false,
   error: null as string | null,
@@ -83,15 +105,16 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
   fetchAll: async () => {
     try {
       set({ loading: true, error: null });
-      const [accounts, transactions, categories, investments, goals, creditCards] = await Promise.all([
+      const [accounts, transactions, categories, investments, goals, creditCards, familyMembers] = await Promise.all([
         accountsApi.getAll(),
         transactionsApi.getAll(),
         categoriesApi.getAll(),
         investmentsApi.getAll(),
         goalsApi.getAll(),
         creditCardsApi.getAll(),
+        familyMembersApi.getAll(),
       ]);
-      set({ accounts, transactions, categories, investments, goals, creditCards, loading: false });
+      set({ accounts, transactions, categories, investments, goals, creditCards, familyMembers, loading: false });
     } catch (err: any) {
       set({ loading: false, error: err.message || 'Erro ao carregar dados.' });
     }
@@ -369,6 +392,99 @@ export const useFinanceStore = create<FinanceState>()((set, get) => ({
     } catch (err: any) {
       set({ error: err.message, actionLoading: false });
       throw err;
+    }
+  },
+
+  unpayInvoice: async (invoiceId) => {
+    try {
+      set({ actionLoading: true });
+      await creditCardsApi.unpayInvoice(invoiceId);
+      const [accounts, creditCards] = await Promise.all([
+        accountsApi.getAll(),
+        creditCardsApi.getAll(),
+      ]);
+      set({ accounts, creditCards, actionLoading: false });
+    } catch (err: any) {
+      set({ error: err.message, actionLoading: false });
+      throw err;
+    }
+  },
+
+  addFamilyMember: async (data) => {
+    try {
+      set({ actionLoading: true });
+      const member = await familyMembersApi.create(data);
+      set({ familyMembers: [...get().familyMembers, member], actionLoading: false });
+    } catch (err: any) {
+      set({ error: err.message, actionLoading: false });
+      throw err;
+    }
+  },
+
+  updateFamilyMember: async (id, data) => {
+    try {
+      set({ actionLoading: true });
+      const updated = await familyMembersApi.update(id, data);
+      set({ familyMembers: get().familyMembers.map((m) => (m.id === id ? updated : m)), actionLoading: false });
+    } catch (err: any) {
+      set({ error: err.message, actionLoading: false });
+      throw err;
+    }
+  },
+
+  deleteFamilyMember: async (id) => {
+    try {
+      set({ actionLoading: true });
+      await familyMembersApi.delete(id);
+      set({ familyMembers: get().familyMembers.filter((m) => m.id !== id), actionLoading: false });
+    } catch (err: any) {
+      set({ error: err.message, actionLoading: false });
+      throw err;
+    }
+  },
+
+  inviteSharedAccount: async (email, accountId) => {
+    try {
+      set({ actionLoading: true });
+      const shared = await sharedAccountsApi.invite(email, accountId);
+      set({ actionLoading: false });
+      return shared;
+    } catch (err: any) {
+      set({ error: err.message, actionLoading: false });
+      throw err;
+    }
+  },
+
+  listMyShares: async () => {
+    return await sharedAccountsApi.listMyShares();
+  },
+
+  removeShare: async (id) => {
+    try {
+      set({ actionLoading: true });
+      await sharedAccountsApi.removeShare(id);
+      set({ actionLoading: false });
+    } catch (err: any) {
+      set({ error: err.message, actionLoading: false });
+      throw err;
+    }
+  },
+
+  listSharedWithMe: async () => {
+    return await sharedAccountsApi.listSharedWithMe();
+  },
+
+  getSharedTransactions: async (accountId) => {
+    return await sharedAccountsApi.getSharedTransactions(accountId);
+  },
+
+  fetchInsights: async () => {
+    try {
+      const data = await insightsApi.get();
+      set({ insights: data as InsightsData });
+      return data as InsightsData;
+    } catch {
+      return null;
     }
   },
 }));

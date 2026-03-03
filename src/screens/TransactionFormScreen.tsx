@@ -36,7 +36,7 @@ const TransactionFormScreen = () => {
   const { colors } = useTheme();
   const navigation = useNavigation<TransactionFormNav>();
   const route = useRoute<TransactionFormRoute>();
-  const { categories, accounts, creditCards, transactions, addTransaction, updateTransaction } = useFinanceStore();
+  const { categories, accounts, creditCards, transactions, familyMembers, addTransaction, updateTransaction } = useFinanceStore();
 
   const transactionId = route.params?.transactionId;
   const existingTx = useMemo(
@@ -58,6 +58,7 @@ const TransactionFormScreen = () => {
   const [recurrence, setRecurrence] = useState<'daily' | 'weekly' | 'monthly' | 'yearly'>('monthly');
   const [recurrenceCount, setRecurrenceCount] = useState('');
   const [installments, setInstallments] = useState('');
+  const [familyMemberId, setFamilyMemberId] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -81,6 +82,7 @@ const TransactionFormScreen = () => {
       if (existingTx.recurrence) setRecurrence(existingTx.recurrence);
       if (existingTx.recurrenceCount) setRecurrenceCount(String(existingTx.recurrenceCount));
       if (existingTx.installments) setInstallments(String(existingTx.installments));
+      if (existingTx.familyMemberId) setFamilyMemberId(existingTx.familyMemberId);
     }
   }, [existingTx]);
 
@@ -140,6 +142,7 @@ const TransactionFormScreen = () => {
         ...(recurring ? { recurrence } : {}),
         ...(recurring && recurrenceCount.trim() ? { recurrenceCount: parseInt(recurrenceCount, 10) || null } : {}),
         ...(useCard && parsedInstallments ? { installments: parsedInstallments } : {}),
+        ...(familyMemberId ? { familyMemberId } : {}),
       };
 
       if (isEdit && existingTx) {
@@ -306,6 +309,32 @@ const TransactionFormScreen = () => {
         )}
 
         {/* Recorrência */}
+        {familyMembers.length > 0 && (
+          <>
+            <Text style={[styles.fieldLabel, { color: colors.textSecondary, marginTop: 16 }]}>
+              Membro da família (opcional)
+            </Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipScroll}>
+              <TouchableOpacity
+                onPress={() => setFamilyMemberId('')}
+                style={[styles.chip, { backgroundColor: !familyMemberId ? colors.primary : colors.mutedBg }]}
+              >
+                <Text style={[styles.chipText, { color: !familyMemberId ? '#fff' : colors.textSecondary }]}>Nenhum</Text>
+              </TouchableOpacity>
+              {familyMembers.map((member) => (
+                <TouchableOpacity
+                  key={member.id}
+                  onPress={() => setFamilyMemberId(member.id)}
+                  style={[styles.chip, { backgroundColor: familyMemberId === member.id ? colors.primary : colors.mutedBg }]}
+                >
+                  <Ionicons name="person" size={14} color={familyMemberId === member.id ? '#fff' : colors.textSecondary} />
+                  <Text style={[styles.chipText, { color: familyMemberId === member.id ? '#fff' : colors.textSecondary }]}>{member.name}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </>
+        )}
+
         <View style={[styles.recurringRow, { marginTop: 20 }]}>
           <View style={styles.recurringLeft}>
             <Ionicons name="repeat-outline" size={18} color={colors.textSecondary} />

@@ -179,6 +179,20 @@ const MoreScreen = () => {
             iconColor="#f59e0b"
           />
           <MenuItem
+            icon="people-outline"
+            label="Membros da Família"
+            onPress={() => navigation.navigate('ManageFamilyMembers')}
+            colors={colors}
+            iconColor="#ec4899"
+          />
+          <MenuItem
+            icon="share-social-outline"
+            label="Contas Compartilhadas"
+            onPress={() => navigation.navigate('SharedAccounts')}
+            colors={colors}
+            iconColor="#06b6d4"
+          />
+          <MenuItem
             icon="swap-horizontal-outline"
             label="Transferência entre contas"
             onPress={() => navigation.navigate('Transfer')}

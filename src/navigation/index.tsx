@@ -25,6 +25,8 @@ import TransferScreen from '@/screens/TransferScreen';
 import ManageRecurrencesScreen from '@/screens/ManageRecurrencesScreen';
 import CreditCardsScreen from '@/screens/CreditCardsScreen';
 import CreditCardDetailScreen from '@/screens/CreditCardDetailScreen';
+import ManageFamilyMembersScreen from '@/screens/ManageFamilyMembersScreen';
+import SharedAccountsScreen from '@/screens/SharedAccountsScreen';
 
 export type RootStackParamList = {
   Login: undefined;
@@ -33,6 +35,8 @@ export type RootStackParamList = {
   ManageCategories: undefined;
   ManageInvestments: undefined;
   ManageRecurrences: undefined;
+  ManageFamilyMembers: undefined;
+  SharedAccounts: undefined;
   Profile: undefined;
   TransactionForm: { transactionId?: string } | undefined;
   Transfer: undefined;
@@ -282,6 +286,16 @@ const AppNavigation = () => {
               name="CreditCardDetail"
               component={CreditCardDetailScreen}
               options={{ title: 'Detalhes do Cartão' }}
+            />
+            <Stack.Screen
+              name="ManageFamilyMembers"
+              component={ManageFamilyMembersScreen}
+              options={{ title: 'Membros da Família' }}
+            />
+            <Stack.Screen
+              name="SharedAccounts"
+              component={SharedAccountsScreen}
+              options={{ title: 'Contas Compartilhadas' }}
             />
           </>
         )}

@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Nexo",
-    "slug": "nexo",
+    "name": "Patrimonium",
+    "slug": "patrimonium",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -14,7 +14,7 @@
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.nexo.app",
+      "bundleIdentifier": "com.patrimonium.app",
       "infoPlist": {
         "NSFaceIDUsageDescription": "Permite acesso rápido ao app com Face ID"
       }
@@ -24,7 +24,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0f172a"
       },
-      "package": "com.nexo.app",
+      "package": "com.patrimonium.app",
       "permissions": [
         "android.permission.USE_BIOMETRIC",
         "android.permission.USE_FINGERPRINT"

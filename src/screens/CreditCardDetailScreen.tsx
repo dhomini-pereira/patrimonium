@@ -62,6 +62,7 @@ const CreditCardDetailScreen = () => {
     accounts,
     getInvoices,
     payInvoice,
+    unpayInvoice,
     deleteTransaction,
     fetchAll,
   } = useFinanceStore();
@@ -82,6 +83,7 @@ const CreditCardDetailScreen = () => {
   );
   const [selectedAccountId, setSelectedAccountId] = useState("");
   const [paying, setPaying] = useState(false);
+  const [unpaying, setUnpaying] = useState<string | null>(null);
 
   const [deleteVisible, setDeleteVisible] = useState(false);
   const [toDelete, setToDelete] = useState<{ id: string; desc: string } | null>(
@@ -155,6 +157,31 @@ const CreditCardDetailScreen = () => {
     }
   };
 
+  const handleUnpay = async (invoiceId: string) => {
+    Alert.alert(
+      "Desfazer pagamento",
+      "O valor será estornado de volta para a conta. Deseja continuar?",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Desfazer",
+          style: "destructive",
+          onPress: async () => {
+            setUnpaying(invoiceId);
+            try {
+              await unpayInvoice(invoiceId);
+              await loadInvoices();
+            } catch (err: any) {
+              Alert.alert("Erro", err.message || "Falha ao desfazer pagamento.");
+            } finally {
+              setUnpaying(null);
+            }
+          },
+        },
+      ],
+    );
+  };
+
   const handleDeletePress = (id: string, desc: string) => {
     setToDelete({ id, desc });
     setDeleteVisible(true);
@@ -162,15 +189,16 @@ const CreditCardDetailScreen = () => {
 
   const confirmDelete = async () => {
     if (!toDelete) return;
+    const target = toDelete;
     setDeleteVisible(false);
-    setDeletingId(toDelete.id);
+    setDeletingId(target.id);
     try {
-      await deleteTransaction(toDelete.id);
+      await deleteTransaction(target.id);
       await loadInvoices(); // refresh invoices after deleting transaction
     } catch {
     } finally {
-      setDeletingId(null);
-      setToDelete(null);
+      setDeletingId(prev => prev === target.id ? null : prev);
+      setToDelete(prev => prev?.id === target.id ? null : prev);
     }
   };
 
@@ -210,16 +238,29 @@ const CreditCardDetailScreen = () => {
       </View>
       <View style={styles.invoiceActions}>
         {inv.paid ? (
-          <View
-            style={[
-              styles.paidBadge,
-              { backgroundColor: colors.income + "15" },
-            ]}
-          >
-            <Ionicons name="checkmark-circle" size={16} color={colors.income} />
-            <Text style={[styles.paidText, { color: colors.income }]}>
-              Paga
-            </Text>
+          <View style={styles.paidRow}>
+            <View
+              style={[
+                styles.paidBadge,
+                { backgroundColor: colors.income + "15" },
+              ]}
+            >
+              <Ionicons name="checkmark-circle" size={16} color={colors.income} />
+              <Text style={[styles.paidText, { color: colors.income }]}>
+                Paga
+              </Text>
+            </View>
+            {unpaying === inv.id ? (
+              <ActivityIndicator size="small" color={colors.warning} style={{ marginLeft: 8 }} />
+            ) : (
+              <TouchableOpacity
+                style={[styles.unpayBtn, { backgroundColor: colors.warning + '15' }]}
+                onPress={() => handleUnpay(inv.id)}
+              >
+                <Ionicons name="arrow-undo-outline" size={14} color={colors.warning} />
+                <Text style={[styles.unpayBtnText, { color: colors.warning }]}>Desfazer</Text>
+              </TouchableOpacity>
+            )}
           </View>
         ) : (
           <TouchableOpacity
@@ -697,6 +738,20 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   paidText: { fontSize: 13, fontWeight: "600" },
+  paidRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  unpayBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 10,
+  },
+  unpayBtnText: { fontSize: 12, fontWeight: "600" },
   payBtn: {
     flexDirection: "row",
     alignItems: "center",

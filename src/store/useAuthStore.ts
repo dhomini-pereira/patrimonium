@@ -129,7 +129,7 @@ export const useAuthStore = create<AuthState>()(
           if (!isEnrolled) return false;
 
           const result = await LocalAuthentication.authenticateAsync({
-            promptMessage: "Desbloqueie para acessar o Nexo",
+            promptMessage: "Desbloqueie para acessar o Patrimonium",
             cancelLabel: "Usar senha",
             disableDeviceFallback: false,
           });

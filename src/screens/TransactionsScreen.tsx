@@ -65,14 +65,15 @@ const TransactionsScreen = () => {
 
   const confirmDelete = async () => {
     if (!toDelete) return;
+    const target = toDelete;
     setDeleteVisible(false);
-    setDeletingId(toDelete.id);
+    setDeletingId(target.id);
     try {
-      await deleteTransaction(toDelete.id);
+      await deleteTransaction(target.id);
     } catch {
     } finally {
-      setDeletingId(null);
-      setToDelete(null);
+      setDeletingId(prev => prev === target.id ? null : prev);
+      setToDelete(prev => prev?.id === target.id ? null : prev);
     }
   };
 

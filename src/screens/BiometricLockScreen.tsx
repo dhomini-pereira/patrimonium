@@ -37,7 +37,7 @@ const BiometricLockScreen = () => {
           <View style={[styles.logoBox, { backgroundColor: colors.primary }]}>
             <Ionicons name="trending-up" size={36} color="#fff" />
           </View>
-          <Text style={[styles.appName, { color: colors.text }]}>Nexo</Text>
+          <Text style={[styles.appName, { color: colors.text }]}>Patrimonium</Text>
           <Text style={[styles.greeting, { color: colors.textSecondary }]}>
             Olá, {user?.name ?? 'Usuário'} 👋
           </Text>

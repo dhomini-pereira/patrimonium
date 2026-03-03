@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -27,8 +27,13 @@ const DashboardScreen = () => {
   const { colors } = useTheme();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { user, privacyMode } = useAuthStore();
-  const { accounts, transactions, categories, loading } = useFinanceStore();
+  const { accounts, transactions, categories, loading, fetchInsights } = useFinanceStore();
   const mv = (v: number) => maskValue(privacyMode, formatCurrency(v));
+
+  const [insights, setInsights] = useState<any>(null);
+  useEffect(() => {
+    fetchInsights().then(data => data && setInsights(data));
+  }, []);
 
   const totalBalance = accounts.reduce((s, a) => s + a.balance, 0);
   const { start, end } = getMonthDates();
@@ -117,6 +122,42 @@ const DashboardScreen = () => {
             <SpendingInsights transactions={monthTx} categories={categories} privacyMode={privacyMode} />
           </StatCard>
         </View>
+
+        {/* Previsão & Médias */}
+        {insights && (
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Previsão & Médias</Text>
+            <StatCard>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: colors.textMuted, fontSize: 12, marginBottom: 2 }}>Média mensal (Despesa)</Text>
+                  <Text style={{ color: colors.destructive, fontSize: 16, fontWeight: '600' }}>
+                    {mv(insights.averageMonthlyExpense)}
+                  </Text>
+                </View>
+                <View style={{ flex: 1, alignItems: 'flex-end' }}>
+                  <Text style={{ color: colors.textMuted, fontSize: 12, marginBottom: 2 }}>Média mensal (Receita)</Text>
+                  <Text style={{ color: colors.income, fontSize: 16, fontWeight: '600' }}>
+                    {mv(insights.averageMonthlyIncome)}
+                  </Text>
+                </View>
+              </View>
+            </StatCard>
+            {insights.upcomingRecurring?.length > 0 && (
+              <StatCard style={{ marginTop: 8 }}>
+                <Text style={{ color: colors.text, fontWeight: '600', marginBottom: 6 }}>Próximas recorrências</Text>
+                {insights.upcomingRecurring.slice(0, 5).map((r: any, i: number) => (
+                  <View key={i} style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4 }}>
+                    <Text style={{ color: colors.text, flex: 1 }} numberOfLines={1}>{r.description}</Text>
+                    <Text style={{ color: r.type === 'expense' ? colors.destructive : colors.income, fontWeight: '500' }}>
+                      {mv(r.amount)}
+                    </Text>
+                  </View>
+                ))}
+              </StatCard>
+            )}
+          </View>
+        )}
 
         {/* Recent Transactions */}
         <View style={styles.section}>

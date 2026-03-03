@@ -37,6 +37,7 @@ export interface Transaction {
   recurrencePaused?: boolean;
   installments?: number | null;
   installmentCurrent?: number | null;
+  familyMemberId?: string | null;
 }
 
 export interface Investment {
@@ -78,4 +79,27 @@ export interface CreditCardInvoice {
   paid: boolean;
   paidAt: string | null;
   paidWithAccountId: string | null;
+}
+
+export interface FamilyMember {
+  id: string;
+  name: string;
+}
+
+export interface SharedAccount {
+  id: string;
+  ownerId: string;
+  sharedWithUserId: string;
+  sharedWithUserName: string;
+  sharedWithUserEmail: string;
+  accountId: string;
+  accountName: string;
+}
+
+export interface InsightsData {
+  upcomingRecurring: { description: string; amount: number; type: string; nextDueDate: string; recurrence: string }[];
+  last12MonthsExpenses: { month: string; total: number }[];
+  last12MonthsIncome: { month: string; total: number }[];
+  averageMonthlyExpense: number;
+  averageMonthlyIncome: number;
 }

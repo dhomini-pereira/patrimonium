@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const DEV_HOST = Platform.OS === 'android' ? '10.0.2.2' : 'localhost';
 const BASE_URL = __DEV__
   ? `http://${DEV_HOST}:3333`
-  : 'https://nexo-back-end.vercel.app';
+  : 'https://patrimonium-api.vercel.app';
 
 const TOKEN_KEY = 'finance-tokens';
 
@@ -237,4 +237,31 @@ export const creditCardsApi = {
     request<any>(`/credit-cards/invoices/${invoiceId}/pay`, {
       method: 'POST', body: JSON.stringify({ accountId }),
     }),
+  unpayInvoice: (invoiceId: string) =>
+    request<any>(`/credit-cards/invoices/${invoiceId}/unpay`, { method: 'POST' }),
+};
+
+export const familyMembersApi = {
+  getAll: () => request<any[]>('/family-members'),
+  create: (data: { name: string }) =>
+    request<any>('/family-members', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id: string, data: { name: string }) =>
+    request<any>(`/family-members/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  delete: (id: string) =>
+    request(`/family-members/${id}`, { method: 'DELETE' }),
+};
+
+export const sharedAccountsApi = {
+  invite: (email: string, accountId: string) =>
+    request<any>('/shared-accounts', { method: 'POST', body: JSON.stringify({ email, accountId }) }),
+  listMyShares: () => request<any[]>('/shared-accounts'),
+  removeShare: (id: string) =>
+    request(`/shared-accounts/${id}`, { method: 'DELETE' }),
+  listSharedWithMe: () => request<any[]>('/shared-with-me'),
+  getSharedTransactions: (accountId: string) =>
+    request<any[]>(`/shared-with-me/${accountId}/transactions`),
+};
+
+export const insightsApi = {
+  get: () => request<any>('/insights'),
 };

@@ -75,9 +75,9 @@ const LoginScreen = () => {
           <View style={[styles.logoBox, { backgroundColor: colors.primary }]}>
             <Ionicons name="trending-up" size={36} color="#fff" />
           </View>
-          <Text style={[styles.appName, { color: colors.text }]}>FinançasPro</Text>
+          <Text style={[styles.appName, { color: colors.text }]}>Patrimonium</Text>
           <Text style={[styles.appDesc, { color: colors.textSecondary }]}>
-            Seu assistente financeiro inteligente
+            Seu patrimônio sob controle
           </Text>
         </View>
 

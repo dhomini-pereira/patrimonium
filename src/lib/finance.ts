@@ -19,10 +19,10 @@ export const parseCurrencyInput = (masked: string): number => {
 };
 
 export const formatDate = (date: string): string =>
-  new Date(date).toLocaleDateString('pt-BR');
+  new Date(date + 'T00:00:00').toLocaleDateString('pt-BR');
 
 export const formatDateShort = (date: string): string =>
-  new Date(date).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+  new Date(date + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
 
 export const maskValue = (privacy: boolean, text: string): string =>
   privacy ? '•••••' : text;
