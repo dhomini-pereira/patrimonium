@@ -76,13 +76,13 @@ jobs:
           fi
 
           echo "Downloading APK from: $BUILD_URL"
-          curl -L -o nexo.apk "$BUILD_URL"
-          ls -lh nexo.apk
+          curl -L -o patrimonium.apk "$BUILD_URL"
+          ls -lh patrimonium.apk
 
       - name: Upload APK as workflow artifact
         uses: actions/upload-artifact@v4
         with:
-          name: nexo-android-apk
-          path: nexo.apk
+          name: patrimonium-android-apk
+          path: patrimonium.apk
           if-no-files-found: warn
           retention-days: 90
