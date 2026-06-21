@@ -166,7 +166,15 @@ export const accountsApi = {
 };
 
 export const transactionsApi = {
-  getAll: () => request<any[]>('/transactions'),
+  getById: (params: { id: string }) => {
+    return request<any>(`/transactions/${params.id}`);
+  },
+  getAll: (params?: { month?: string }) => {
+    const query = params?.month ? `?month=${encodeURIComponent(params.month)}` : '';
+    return request<any[]>(`/transactions${query}`);
+  },
+  getMonths: (page: number = 1) =>
+    request<{ totalAmount: number; month: string }[]>(`/transactions/months?page=${page}`),
   create: (data: any) =>
     request<any>('/transactions', { method: 'POST', body: JSON.stringify(data) }),
   update: (id: string, data: any) =>

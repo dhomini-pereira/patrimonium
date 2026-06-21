@@ -21,6 +21,7 @@ import CurrencyInput from '@/components/CurrencyInput';
 import type { RootStackParamList } from '@/navigation';
 import { parseCurrencyInput, formatCurrencyInput } from '@/lib/finance';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import { transactionsApi } from '@/services/api';
 
 type TransactionFormNav = NativeStackNavigationProp<RootStackParamList, 'TransactionForm'>;
 type TransactionFormRoute = RouteProp<RootStackParamList, 'TransactionForm'>;
@@ -39,10 +40,16 @@ const TransactionFormScreen = () => {
   const { categories, accounts, creditCards, transactions, familyMembers, addTransaction, updateTransaction } = useFinanceStore();
 
   const transactionId = route.params?.transactionId;
-  const existingTx = useMemo(
-    () => (transactionId ? transactions.find((t) => t.id === transactionId) : null),
-    [transactionId, transactions],
-  );
+  const [existingTx, setExistingTx] = useState(null);
+
+  useEffect(() => {
+    if (!transactionId) return;
+
+    transactionsApi
+      .getById({ id: transactionId })
+      .then(setExistingTx);
+  }, [transactionId]);
+
   const isEdit = !!existingTx;
 
   const [type, setType] = useState<'income' | 'expense'>('expense');

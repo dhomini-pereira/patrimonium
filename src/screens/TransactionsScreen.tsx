@@ -10,11 +10,12 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useFinanceStore } from '@/store/useFinanceStore';
+import { transactionsApi } from '@/services/api';
 import { formatCurrency, maskValue, formatDateShort } from '@/lib/finance';
 import ScreenHeader from '@/components/ScreenHeader';
 import StatCard from '@/components/StatCard';
@@ -27,8 +28,14 @@ const PAGE_SIZE = 10;
 const TransactionsScreen = () => {
   const { colors } = useTheme();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { transactions, categories, creditCards, deleteTransaction } = useFinanceStore();
+  const route = useRoute<RouteProp<RootStackParamList, 'Transactions'>>();
+  const month = route.params?.month;
+
+  const { categories, creditCards, deleteTransaction } = useFinanceStore();
   const { privacyMode } = useAuthStore();
+
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [loadingTx, setLoadingTx] = useState(true);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'all' | 'income' | 'expense'>('all');
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -39,6 +46,22 @@ const TransactionsScreen = () => {
   const mv = (v: number) => maskValue(privacyMode, formatCurrency(v));
   const getCat = (id: string) => categories.find((c) => c.id === id);
   const getCard = (id: string | null | undefined) => id ? creditCards.find((c) => c.id === id) : null;
+
+  const loadTransactions = useCallback(async () => {
+    setLoadingTx(true);
+    try {
+      const data = await transactionsApi.getAll(month ? { month } : undefined);
+      setTransactions(data);
+    } catch {
+      setTransactions([]);
+    } finally {
+      setLoadingTx(false);
+    }
+  }, [month]);
+
+  useEffect(() => {
+    loadTransactions();
+  }, [loadTransactions]);
 
   const filtered = useMemo(() => {
     let list = [...transactions].sort((a, b) => b.date.localeCompare(a.date));
@@ -70,6 +93,7 @@ const TransactionsScreen = () => {
     setDeletingId(target.id);
     try {
       await deleteTransaction(target.id);
+      setTransactions((prev) => prev.filter((t) => t.id !== target.id));
     } catch {
     } finally {
       setDeletingId(prev => prev === target.id ? null : prev);
@@ -77,9 +101,17 @@ const TransactionsScreen = () => {
     }
   };
 
+  const monthLabel = useMemo(() => {
+    if (!month) return 'Transações';
+    const [mm, yyyy] = month.split('/');
+    const names = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+    const idx = parseInt(mm, 10) - 1;
+    return `${names[idx] ?? mm}/${yyyy}`;
+  }, [month]);
+
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top']}>
-      <ScreenHeader title="Transações" />
+      <ScreenHeader title={monthLabel} />
 
       {/* Search */}
       <View style={[styles.searchContainer, { paddingHorizontal: 20 }]}>
@@ -102,86 +134,90 @@ const TransactionsScreen = () => {
         <PillButton label="Despesas" active={filter === 'expense'} onPress={() => setFilter('expense')} />
       </View>
 
-      <FlatList
-        data={displayed}
-        keyExtractor={(item) => item.id}
-        style={styles.list}
-        showsVerticalScrollIndicator={false}
-        onEndReached={loadMore}
-        onEndReachedThreshold={0.5}
-        ListEmptyComponent={
-          <Text style={[styles.emptyText, { color: colors.textMuted }]}>
-            Nenhuma transação encontrada
-          </Text>
-        }
-        ListFooterComponent={
-          visibleCount < filtered.length ? (
-            <ActivityIndicator size="small" color={colors.primary} style={{ marginVertical: 16 }} />
-          ) : (
-            <View style={{ height: 100 }} />
-          )
-        }
-        renderItem={({ item: tx }) => {
-          const cat = getCat(tx.categoryId);
-          const card = getCard(tx.creditCardId);
-          const installmentLabel = tx.installments && tx.installmentCurrent
-            ? ` · ${tx.installmentCurrent}/${tx.installments}x`
-            : '';
-          return (
-            <TouchableOpacity
-              onPress={() => navigation.navigate('TransactionForm', { transactionId: tx.id })}
-              onLongPress={() => handleDelete(tx.id, tx.description)}
-              activeOpacity={0.7}
-            >
-              <StatCard style={styles.txCard}>
-                <View style={styles.txRow}>
-                  <View style={styles.txLeft}>
-                    <Text style={styles.txIcon}>{cat?.icon ?? '📋'}</Text>
-                    <View style={styles.txInfo}>
-                      <Text style={[styles.txDesc, { color: colors.text }]}>{tx.description}</Text>
-                      <Text style={[styles.txMeta, { color: colors.textMuted }]}>
-                        {cat?.name} · {formatDateShort(tx.date)}
-                        {card ? ` · 💳 ${card.name}` : ''}
-                        {installmentLabel}
-                        {tx.recurring ? ' · 🔄' : ''}
-                      </Text>
+      {loadingTx ? (
+        <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
+      ) : (
+        <FlatList
+          data={displayed}
+          keyExtractor={(item) => item.id}
+          style={styles.list}
+          showsVerticalScrollIndicator={false}
+          onEndReached={loadMore}
+          onEndReachedThreshold={0.5}
+          ListEmptyComponent={
+            <Text style={[styles.emptyText, { color: colors.textMuted }]}>
+              Nenhuma transação encontrada
+            </Text>
+          }
+          ListFooterComponent={
+            visibleCount < filtered.length ? (
+              <ActivityIndicator size="small" color={colors.primary} style={{ marginVertical: 16 }} />
+            ) : (
+              <View style={{ height: 100 }} />
+            )
+          }
+          renderItem={({ item: tx }) => {
+            const cat = getCat(tx.categoryId);
+            const card = getCard(tx.creditCardId);
+            const installmentLabel = tx.installments && tx.installmentCurrent
+              ? ` · ${tx.installmentCurrent}/${tx.installments}x`
+              : '';
+            return (
+              <TouchableOpacity
+                onPress={() => navigation.navigate('TransactionForm', { transactionId: tx.id })}
+                onLongPress={() => handleDelete(tx.id, tx.description)}
+                activeOpacity={0.7}
+              >
+                <StatCard style={styles.txCard}>
+                  <View style={styles.txRow}>
+                    <View style={styles.txLeft}>
+                      <Text style={styles.txIcon}>{cat?.icon ?? '📋'}</Text>
+                      <View style={styles.txInfo}>
+                        <Text style={[styles.txDesc, { color: colors.text }]}>{tx.description}</Text>
+                        <Text style={[styles.txMeta, { color: colors.textMuted }]}>
+                          {cat?.name} · {formatDateShort(tx.date)}
+                          {card ? ` · 💳 ${card.name}` : ''}
+                          {installmentLabel}
+                          {tx.recurring ? ' · 🔄' : ''}
+                        </Text>
+                      </View>
                     </View>
-                  </View>
-                  <View style={styles.txRight}>
-                    <Text
-                      style={[
-                        styles.txAmount,
-                        { color: tx.type === 'income' ? colors.income : colors.expense },
-                      ]}
-                    >
-                      {tx.type === 'income' ? '+' : '-'}
-                      {mv(tx.amount)}
-                    </Text>
-                    <View style={styles.txActions}>
-                      <TouchableOpacity
-                        onPress={() => navigation.navigate('TransactionForm', { transactionId: tx.id })}
-                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    <View style={styles.txRight}>
+                      <Text
+                        style={[
+                          styles.txAmount,
+                          { color: tx.type === 'income' ? colors.income : colors.expense },
+                        ]}
                       >
-                        <Ionicons name="create-outline" size={16} color={colors.textSecondary} />
-                      </TouchableOpacity>
-                      {deletingId === tx.id ? (
-                        <ActivityIndicator size="small" color={colors.destructive} />
-                      ) : (
+                        {tx.type === 'income' ? '+' : '-'}
+                        {mv(tx.amount)}
+                      </Text>
+                      <View style={styles.txActions}>
                         <TouchableOpacity
-                          onPress={() => handleDelete(tx.id, tx.description)}
+                          onPress={() => navigation.navigate('TransactionForm', { transactionId: tx.id })}
                           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                         >
-                          <Ionicons name="trash-outline" size={16} color={colors.destructive} />
+                          <Ionicons name="create-outline" size={16} color={colors.textSecondary} />
                         </TouchableOpacity>
-                      )}
+                        {deletingId === tx.id ? (
+                          <ActivityIndicator size="small" color={colors.destructive} />
+                        ) : (
+                          <TouchableOpacity
+                            onPress={() => handleDelete(tx.id, tx.description)}
+                            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                          >
+                            <Ionicons name="trash-outline" size={16} color={colors.destructive} />
+                          </TouchableOpacity>
+                        )}
+                      </View>
                     </View>
                   </View>
-                </View>
-              </StatCard>
-            </TouchableOpacity>
-          );
-        }}
-      />
+                </StatCard>
+              </TouchableOpacity>
+            );
+          }}
+        />
+      )}
 
       {/* FAB */}
       <TouchableOpacity

@@ -27,6 +27,7 @@ import CreditCardsScreen from '@/screens/CreditCardsScreen';
 import CreditCardDetailScreen from '@/screens/CreditCardDetailScreen';
 import ManageFamilyMembersScreen from '@/screens/ManageFamilyMembersScreen';
 import SharedAccountsScreen from '@/screens/SharedAccountsScreen';
+import MonthsScreen from '@/screens/MonthsScreen';
 
 export type RootStackParamList = {
   Login: undefined;
@@ -42,6 +43,7 @@ export type RootStackParamList = {
   Transfer: undefined;
   CreditCards: undefined;
   CreditCardDetail: { cardId: string };
+  Transactions: { month: string };
 };
 
 export type TabParamList = {
@@ -53,14 +55,18 @@ export type TabParamList = {
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
-const tabs = [
-  { key: 'Dashboard', label: 'Início', icon: 'grid-outline' as const },
-  { key: 'Transactions', label: 'Transações', icon: 'swap-horizontal-outline' as const },
-  { key: 'Accounts', label: 'Contas', icon: 'wallet-outline' as const },
-  { key: 'More', label: 'Mais', icon: 'menu-outline' as const },
-];
+const tabs = 	[
+		{ key: "Dashboard", label: "Início", icon: "grid-outline" as const },
+		{
+			key: "Transactions",
+			label: "Transações",
+			icon: "swap-horizontal-outline" as const,
+		},
+		{ key: "Accounts", label: "Contas", icon: "wallet-outline" as const },
+		{ key: "More", label: "Mais", icon: "menu-outline" as const },
+	];
 
-const tabScreens = [DashboardScreen, TransactionsScreen, AccountsScreen, MoreScreen];
+const tabScreens = [DashboardScreen, MonthsScreen, AccountsScreen, MoreScreen];
 
 const TabNavigator = () => {
   const { colors } = useTheme();
@@ -241,6 +247,11 @@ const AppNavigation = () => {
               name="Main"
               component={TabNavigator}
               options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="Transactions"
+              component={TransactionsScreen}
+              options={{ title: 'Transações' }}
             />
             <Stack.Screen
               name="ManageGoals"
